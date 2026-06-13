@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LexFeed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0F172A;--navy-l:#1E293B;--amber:#B45309;--amber-l:#D97706;--amber-bg:rgba(180,83,9,0.08);
+  --s50:#F8FAFC;--s100:#F1F5F9;--s200:#E2E8F0;--s300:#CBD5E1;--s400:#94A3B8;--s500:#64748B;--s600:#475569;--s700:#334155;--s800:#1E293B;
+  --em:#059669;--em-bg:#ECFDF5;--em-t:#065F46;
+  --red:#DC2626;--red-bg:#FEF2F2;--red-t:#991B1B;
+  --blue:#2563EB;--blue-bg:#EFF6FF;--blue-t:#1E40AF;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:var(--s50);color:var(--navy);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);border-bottom:1px solid var(--s200);height:64px;display:flex;align-items:center}
+.nav-i{max-width:1280px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none}
+.logo-t{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--navy)}
+.nav-links{display:flex;gap:4px}
+.nl{color:var(--s600);font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;padding:7px 12px;border-radius:4px;transition:all .15s;font-family:var(--sans)}
+.nl:hover{background:var(--s100);color:var(--navy)}
+.nl.active{color:var(--amber);background:var(--amber-bg)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.user-sel{background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:5px 8px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--navy);outline:none;cursor:pointer;max-width:190px}
+.nav-av{width:30px;height:30px;border-radius:50%;background:var(--amber-bg);border:1px solid rgba(180,83,9,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);flex-shrink:0}
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);padding:40px 24px 0}
+.hero-i{max-width:1280px;margin:0 auto}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+.hero-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+.hero-title{font-family:var(--serif);font-size:32px;font-weight:700;color:white}
+.hero-sub{color:var(--s400);font-size:14px;max-width:480px;line-height:1.75;margin-top:6px}
+.hero-stats{display:flex;gap:12px;flex-shrink:0}
+.stat-box{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:12px 16px;text-align:center;min-width:80px}
+.stat-num{font-size:20px;font-weight:800;color:white}
+.stat-lbl{font-size:10px;color:var(--s400);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.api-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;margin-top:10px}
+.b-ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ADE80}
+.b-err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#F87171}
+.b-chk{background:rgba(148,163,184,.1);border:1px solid rgba(148,163,184,.2);color:var(--s400)}
+.cat-tabs{border-top:1px solid rgba(255,255,255,.1);padding:16px 0 0;overflow-x:auto;display:flex;gap:8px;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:7px 16px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:var(--s300);transition:all .15s;white-space:nowrap;font-family:var(--sans)}
+.cat-tab:hover{background:rgba(255,255,255,.14);color:white}
+.cat-tab.active{background:var(--amber);border-color:var(--amber);color:white}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 300px;gap:28px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}.sidebar{display:none}}
+.composer{background:white;border:1px solid var(--s200);border-radius:6px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;cursor:pointer;transition:box-shadow .15s;margin-bottom:20px}
+.composer:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.c-av{width:38px;height:38px;border-radius:50%;background:var(--s100);border:1px solid var(--s200);display:flex;align-items:center;justify-content:center;color:var(--amber);font-size:12px;flex-shrink:0;font-weight:700}
+.c-ph{flex:1;background:var(--s50);border:1px solid var(--s200);border-radius:4px;height:42px;display:flex;align-items:center;padding:0 14px;color:var(--s400);font-size:14px}
+.btn-a{background:var(--amber);color:white;border:none;border-radius:4px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:6px;white-space:nowrap;font-family:var(--sans)}
+.btn-a:hover{background:var(--amber-l)}
+.btn-a:disabled{opacity:.5;cursor:not-allowed}
+.btn-n{background:var(--navy);color:white;border:none;border-radius:4px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.btn-n:hover{background:var(--navy-l)}
+.post-card{background:white;border:1px solid var(--s200);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden;margin-bottom:16px;transition:box-shadow .2s;animation:fadeUp .25s ease both}
+.post-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.post-accent{height:3px}
+.a-news{background:var(--blue)} .a-help{background:var(--red)} .a-article{background:var(--em)} .a-update{background:var(--s300)}
+.post-body{padding:20px 22px}
+.post-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.post-ar{display:flex;align-items:center;gap:10px}
+.post-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:2px solid}
+.av-adv{background:rgba(180,83,9,.1);border-color:rgba(180,83,9,.2);color:var(--amber)}
+.av-cit{background:var(--s100);border-color:var(--s200);color:var(--s500)}
+.av-anon{background:var(--navy);border-color:var(--navy-l);color:white}
+.post-name{font-size:13px;font-weight:700;color:var(--navy)}
+.role-bdg{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:999px}
+.r-adv{background:var(--amber);color:white} .r-cit{background:var(--s100);color:var(--s600)} .r-anon{background:var(--navy);color:white}
+.post-time{font-size:11px;color:var(--s400);margin-top:2px}
+.type-bdg{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
+.t-news{background:var(--blue-bg);color:var(--blue-t);border-color:#BFDBFE}
+.t-help{background:var(--red-bg);color:var(--red-t);border-color:#FECACA}
+.t-article{background:var(--em-bg);color:var(--em-t);border-color:#A7F3D0}
+.t-update{background:var(--s100);color:var(--s600);border-color:var(--s200)}
+.post-cat{font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.post-txt{font-size:14px;color:var(--s700);line-height:1.7;white-space:pre-wrap}
+.post-txt.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.help-warn{margin-top:12px;padding:10px 14px;background:var(--red-bg);border:1px solid #FECACA;border-radius:4px;font-size:11px;font-weight:700;color:var(--red-t);line-height:1.5}
+.post-acts{display:flex;align-items:center;gap:2px;border-top:1px solid var(--s100);padding-top:12px;margin-top:14px}
+.act{display:flex;align-items:center;gap:5px;padding:7px 10px;border-radius:4px;border:none;background:none;color:var(--s500);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--sans);flex:1;justify-content:center}
+.act:hover{background:var(--s50);color:var(--navy)}
+.act.liked{color:var(--red);background:var(--red-bg)}
+.act-sq{width:32px;height:32px;border-radius:4px;border:none;background:none;color:var(--s400);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:14px}
+.act-sq:hover{background:var(--red-bg);color:var(--red)}
+.score{margin-left:auto;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);color:var(--em-t);font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.cmts{background:var(--s50);border-top:1px solid var(--s100);padding:14px 22px}
+.cmt{display:flex;gap:10px;margin-bottom:10px}
+.cmt-av{width:26px;height:26px;border-radius:50%;background:white;border:1px solid var(--s200);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--s400);flex-shrink:0}
+.cmt-body{flex:1;background:white;padding:8px 12px;border-radius:4px;border:1px solid var(--s200)}
+.cmt-name{font-size:12px;font-weight:700;color:var(--navy)}
+.cmt-time{font-size:10px;color:var(--s400);float:right}
+.cmt-txt{font-size:12px;color:var(--s600);line-height:1.6;margin-top:3px}
+.cmt-form{display:flex;gap:8px;margin-top:8px}
+.cmt-in{flex:1;height:36px;background:white;border:1px solid var(--s200);border-radius:4px;padding:0 12px;font-size:12px;font-family:var(--sans);color:var(--navy);outline:none;transition:border-color .15s}
+.cmt-in:focus{border-color:var(--navy)}
+.btn-send{background:var(--navy);color:white;border:none;border-radius:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px}
+.btn-send:hover{background:var(--navy-l)}
+.skel{animation:shim 1.5s infinite}
+@keyframes shim{0%,100%{opacity:1}50%{opacity:.5}}
+.sk{background:var(--s200);border-radius:4px}
+.widget{background:white;border:1px solid var(--s200);border-radius:6px;overflow:hidden;margin-bottom:20px}
+.w-head{padding:14px 18px;border-bottom:1px solid var(--s100);background:linear-gradient(to right,var(--s50),white);display:flex;align-items:center;justify-content:space-between}
+.w-title{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--navy)}
+.live-bdg{font-size:9px;font-weight:800;color:var(--em-t);background:var(--em-bg);border:1px solid #A7F3D0;padding:2px 8px;border-radius:999px;display:flex;align-items:center;gap:4px}
+.news-item{padding:12px 18px;border-bottom:1px solid var(--s100);cursor:pointer;transition:background .12s}
+.news-item:last-child{border-bottom:none}
+.news-item:hover{background:var(--s50)}
+.news-tag{font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.1em}
+.news-title{font-size:13px;font-weight:600;color:var(--s800);line-height:1.4;margin-top:3px}
+.news-item:hover .news-title{color:var(--amber)}
+.news-time{font-size:10px;color:var(--s400);margin-top:3px}
+.tr-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:all .12s;border:1px solid transparent;margin:4px;border-radius:4px}
+.tr-item:hover{background:var(--s50);border-color:var(--s200)}
+.tr-ic{padding:7px;border-radius:4px;font-size:15px;flex-shrink:0}
+.tr-lbl{font-size:13px;font-weight:700;color:var(--navy)}
+.tr-cnt{font-size:10px;color:var(--s400);font-weight:600}
+.tr-arr{margin-left:auto;color:var(--s300);font-size:14px;transition:color .12s}
+.tr-item:hover .tr-arr{color:var(--amber)}
+.cta-w{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);border-radius:6px;padding:22px;position:relative;overflow:hidden;margin-bottom:20px}
+.cta-wm{position:absolute;right:-20px;bottom:-20px;font-size:80px;opacity:.05;color:white;pointer-events:none}
+.cta-lbl{font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.cta-title{font-family:var(--serif);font-size:20px;font-weight:700;color:white;line-height:1.25;margin-bottom:8px}
+.cta-sub{font-size:12px;color:var(--s400);line-height:1.7;margin-bottom:16px}
+.btn-cta{width:100%;background:var(--amber);color:white;border:none;border-radius:4px;height:42px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--sans);transition:background .15s}
+.btn-cta:hover{background:var(--amber-l)}
+.i-pill{display:inline-block;background:var(--amber-bg);border:1px solid rgba(180,83,9,.2);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:500;color:var(--amber);margin:0 4px 6px 0}
+.i-impl{display:inline-block;background:var(--s100);border:1px solid var(--s200);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--s600);margin:0 4px 6px 0}
+.page-w{max-width:1280px;margin:0 auto;padding:32px 24px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--s500);cursor:pointer;border:none;background:none;padding:0;margin-bottom:20px;font-family:var(--sans);transition:color .15s}
+.back:hover{color:var(--navy)}
+.pg-desc{font-size:13px;color:var(--s500);line-height:1.8;margin-bottom:24px;max-width:600px}
+.card{background:white;border:1px solid var(--s200);border-radius:6px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.f-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--s500);margin-bottom:6px;display:block}
+.f-ta{width:100%;background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:12px;font-family:var(--sans);font-size:13px;color:var(--navy);resize:vertical;min-height:120px;transition:border-color .15s;outline:none}
+.f-ta:focus{border-color:var(--navy);background:white}
+.f-in{width:100%;height:40px;background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:0 12px;font-family:var(--sans);font-size:13px;color:var(--navy);outline:none;transition:border-color .15s}
+.f-in:focus{border-color:var(--navy);background:white}
+.e-result{margin-top:20px;background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:16px}
+.r-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.r-row{font-size:12px;color:var(--s600);line-height:1.9}
+.r-row strong{color:var(--navy)}
+.sig-card{background:white;border:1px solid var(--s200);border-radius:6px;padding:18px 20px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px}
+.sig-name{font-size:14px;font-weight:700;color:var(--navy)}
+.sig-desc{font-size:13px;color:var(--s500);line-height:1.7;margin-top:4px}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;animation:fi .15s}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{background:white;border-radius:6px;overflow:hidden;width:100%;max-width:560px;animation:su .2s ease}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.m-head{padding:20px 24px;border-bottom:1px solid var(--s100);background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);display:flex;align-items:center;gap:12px}
+.m-ic{background:rgba(180,83,9,.2);padding:8px;border-radius:4px;font-size:16px}
+.m-title{font-family:var(--serif);font-size:20px;font-weight:700;color:white}
+.m-body{padding:24px}
+.m-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.m-sel{width:100%;height:40px;background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:0 10px;font-family:var(--sans);font-size:13px;color:var(--navy);outline:none}
+.m-foot{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--s100);margin-top:4px}
+.ic-sm{width:34px;height:34px;border:none;background:none;color:var(--s400);cursor:pointer;border-radius:4px;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ic-sm:hover{background:var(--amber-bg);color:var(--amber)}
+.spinner{width:20px;height:20px;border:2px solid var(--s200);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{background:white;border:2px dashed var(--s300);border-radius:6px;padding:60px;text-align:center}
+.empty-ic{font-size:40px;margin-bottom:12px}
+.empty-t{font-family:var(--serif);font-size:18px;color:var(--s500)}
+.empty-s{font-size:13px;color:var(--s400);margin-top:6px}
+.res-bar{display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:14px}
+.res-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--s400)}
+.clr-btn{font-size:12px;font-weight:700;color:var(--amber);cursor:pointer;border:none;background:none;font-family:var(--sans)}
+.clr-btn:hover{text-decoration:underline}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:white;padding:12px 18px;border-radius:6px;font-size:13px;font-weight:500;z-index:9999;animation:ti .2s ease;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:320px}
+@keyframes ti{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.ok{border-left:3px solid #4ADE80}
+.toast.err{border-left:3px solid var(--red)}
+.view{display:none}
+.view.active{display:block}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s300);border-radius:3px}
+
+/* ── NEWS PAGE STYLES ── */
+.news-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);padding:40px 24px 32px}
+.news-hero-i{max-width:1280px;margin:0 auto}
+.news-grid{max-width:1280px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.news-card{background:white;border:1px solid var(--s200);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s;animation:fadeUp .25s ease both;display:flex;flex-direction:column}
+.news-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1);transform:translateY(-2px)}
+.news-card-img{width:100%;height:160px;object-fit:cover;background:linear-gradient(135deg,var(--navy-l),var(--navy))}
+.news-card-img-ph{width:100%;height:160px;background:linear-gradient(135deg,var(--navy-l) 0%,var(--navy) 100%);display:flex;align-items:center;justify-content:center;font-size:40px}
+.news-card-body{padding:18px;flex:1;display:flex;flex-direction:column}
+.news-card-tag{font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.news-card-title{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--navy);line-height:1.4;margin-bottom:8px;flex:1}
+.news-card-summary{font-size:12px;color:var(--s500);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-card-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--s100);padding-top:12px;margin-top:auto}
+.news-card-meta{display:flex;flex-direction:column;gap:2px}
+.news-card-source{font-size:11px;font-weight:700;color:var(--navy)}
+.news-card-time{font-size:10px;color:var(--s400)}
+.news-card-actions{display:flex;gap:6px}
+.btn-read{font-size:11px;font-weight:700;color:var(--blue-t);background:var(--blue-bg);border:1px solid #BFDBFE;border-radius:4px;padding:5px 10px;cursor:pointer;font-family:var(--sans);transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn-read:hover{background:#DBEAFE}
+.btn-retweet{font-size:11px;font-weight:700;color:var(--em-t);background:var(--em-bg);border:1px solid #A7F3D0;border-radius:4px;padding:5px 10px;cursor:pointer;font-family:var(--sans);transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.btn-retweet:hover{background:#BBFCDE}
+.news-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:60px;color:var(--s400);font-size:14px}
+.news-source-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:var(--s300);margin-top:8px}
+.news-filter-bar{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.nf-tab{font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--s200);background:white;color:var(--s600);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.nf-tab:hover{border-color:var(--amber);color:var(--amber)}
+.nf-tab.active{background:var(--amber);border-color:var(--amber);color:white}
+.refresh-btn{margin-left:auto;font-size:12px;font-weight:700;color:var(--s500);background:none;border:1px solid var(--s200);border-radius:4px;padding:6px 12px;cursor:pointer;font-family:var(--sans);transition:all .15s;display:flex;align-items:center;gap:5px}
+.refresh-btn:hover{border-color:var(--amber);color:var(--amber)}
+.refresh-btn.spinning svg{animation:spin .7s linear infinite}
+.cached-badge{font-size:10px;color:var(--s400);background:var(--s100);border:1px solid var(--s200);border-radius:999px;padding:2px 8px;margin-left:8px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-i">
+    <div class="logo" onclick="goView('feed')">
+      <span style="font-size:20px">⚖️</span>
+      <span class="logo-t">LexFeed</span>
+    </div>
+    <div class="nav-links">
+      <button class="nl active" id="navFeed"    onclick="goView('feed')">Justice Feed</button>
+      <button class="nl"        id="navNews"    onclick="goView('news')">📰 Legal News</button>
+      <button class="nl"        id="navEnrich"  onclick="goView('enrich')">Enrich Post</button>
+      <button class="nl"        id="navSignals" onclick="goView('signals')">Signals</button>
+    </div>
+    <div class="nav-right">
+      <select class="user-sel" id="userSel" onchange="switchUser(this.value)">
+        <option value="">Loading users…</option>
+      </select>
+      <div class="nav-av" id="navAv">?</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ FEED ══ -->
+<div id="viewFeed" class="view active">
+  <div class="hero">
+    <div class="hero-i">
+      <div class="hero-top">
+        <div>
+          <div class="hero-lbl">📰 Community Feed</div>
+          <h1 class="hero-title">Justice Feed</h1>
+          <p class="hero-sub">Advocates share legal awareness. Citizens ask for help. Everyone learns together — openly and safely.</p>
+          <div class="api-badge b-chk" id="apiBadge">⏳ Connecting to backend…</div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-box">
+            <div class="stat-num" id="postCount">—</div>
+            <div class="stat-lbl">Posts</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num"><span class="live-dot"></span></div>
+            <div class="stat-lbl">Live</div>
+          </div>
+        </div>
+      </div>
+      <div class="cat-tabs" id="catTabs"></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div>
+      <div class="composer" onclick="openModal()">
+        <div class="c-av" id="compAv">?</div>
+        <div class="c-ph">Share a legal update or ask for help…</div>
+        <button class="btn-a">✏️ Post</button>
+      </div>
+      <div class="res-bar">
+        <span class="res-lbl" id="resLbl">Loading…</span>
+        <button class="clr-btn" id="clrBtn" style="display:none" onclick="clearCat()">Clear ×</button>
+      </div>
+      <div id="feedPosts"></div>
+    </div>
+    <aside class="sidebar">
+      <div class="widget">
+        <div class="w-head"><span class="w-title">🎯 Your Interests</span></div>
+        <div style="padding:14px 18px" id="intPills"><p style="font-size:13px;color:var(--s400)">Select a user above</p></div>
+      </div>
+      <div class="widget">
+        <div class="w-head">
+          <span class="w-title">📰 Legal News</span>
+          <span class="live-bdg"><span class="live-dot"></span> Live</span>
+        </div>
+        <div id="newsEl"><div style="padding:16px;text-align:center"><div class="spinner" style="margin:0 auto"></div></div></div>
+        <div style="padding:10px 18px;border-top:1px solid var(--s100)">
+          <button onclick="goView('news')" style="width:100%;font-size:12px;font-weight:700;color:var(--amber);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:4px">View all legal news ›</button>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="w-head"><span class="w-title">📈 Trending Now</span></div>
+        <div id="trendEl"></div>
+      </div>
+      <div class="cta-w">
+        <div class="cta-wm">⚖️</div>
+        <div class="cta-lbl">Need Help?</div>
+        <div class="cta-title">Connect with a Verified Advocate</div>
+        <div class="cta-sub">Find a specialist — property, family, criminal, consumer, and more.</div>
+        <button class="btn-cta" onclick="toast('Advocate directory — coming soon!')">Find an Advocate →</button>
+      </div>
+      <p style="text-align:center;font-size:10px;color:var(--s300);padding-bottom:16px">© 2026 LexFeed · NyayaSetu</p>
+    </aside>
+  </div>
+</div>
+
+<!-- ══ NEWS ══ -->
+<div id="viewNews" class="view">
+  <div class="news-hero">
+    <div class="news-hero-i">
+      <div class="hero-lbl">📰 Live Legal News</div>
+      <h1 class="hero-title">Indian Legal News</h1>
+      <p class="hero-sub">Real-time news from India's most trusted legal sources. Read, share awareness, and retweet to the community feed.</p>
+      <div id="newsBadge" class="news-source-badge">⏳ Fetching live news…</div>
+    </div>
+  </div>
+  <div style="max-width:1280px;margin:0 auto;padding:28px 24px 0">
+    <div class="news-filter-bar">
+      <button class="nf-tab active" onclick="filterNews('All',this)">All</button>
+      <button class="nf-tab" onclick="filterNews('Supreme Court',this)">Supreme Court</button>
+      <button class="nf-tab" onclick="filterNews('High Court',this)">High Court</button>
+      <button class="nf-tab" onclick="filterNews('Consumer Rights',this)">Consumer Rights</button>
+      <button class="nf-tab" onclick="filterNews('Criminal Law',this)">Criminal Law</button>
+      <button class="nf-tab" onclick="filterNews('Tenant Rights',this)">Tenant Rights</button>
+      <button class="nf-tab" onclick="filterNews('Property Law',this)">Property Law</button>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadNews(true)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+  <div class="news-grid" id="newsGrid">
+    <div class="news-loading"><div class="spinner"></div> Loading live Indian legal news…</div>
+  </div>
+</div>
+
+<!-- ══ ENRICH ══ -->
+<div id="viewEnrich" class="view">
+  <div class="page-w" style="max-width:700px">
+    <button class="back" onclick="goView('feed')">← Back to Feed</button>
+    <p class="pg-desc">Paste a legal post below. LexFeed calls the <code>/enrich</code> endpoint which uses Groq's LLM to auto-classify the post, then generates a 384-dim semantic embedding and stores both.</p>
+    <div class="card">
+      <div style="margin-bottom:16px">
+        <label class="f-lbl">Post Content</label>
+        <textarea class="f-ta" id="eContent" placeholder="e.g. My landlord is refusing to return my security deposit of ₹50,000 even after 3 months of vacating…"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label class="f-lbl">Post ID (optional)</label>
+          <input class="f-in" id="eId" placeholder="Auto-generated if blank"/>
+        </div>
+        <button class="btn-a" onclick="runEnrich()" id="eBtn">✨ Enrich Post</button>
+      </div>
+      <div id="eResult" style="display:none;margin-top:20px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIGNALS ══ -->
+<div id="viewSignals" class="view">
+  <div class="page-w" style="max-width:700px">
+    <button class="back" onclick="goView('feed')">← Back to Feed</button>
+    <p class="pg-desc">LexFeed scores every candidate post using 6 weighted signals. Max total ≈ 260 pts. Posts pass through diversification and a final filter.</p>
+    <div id="sigCards"></div>
+  </div>
+</div>
+
+<!-- ══ COMPOSER MODAL ══ -->
+<div class="modal-ov" id="compModal" style="display:none" onclick="closeBg(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="m-head">
+      <div class="m-ic">✏️</div>
+      <div class="m-title">Create a Post</div>
+      <button onclick="closeModal()" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div class="m-body">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <div class="c-av" id="modalAv">?</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy)" id="modalUser">User</div>
+          <button onclick="toggleAnon()" id="anonBtn"
+            style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:var(--s100);color:var(--s600);border:1px solid var(--s200);border-radius:999px;padding:2px 8px;cursor:pointer;margin-top:3px;font-family:var(--sans)">
+            Post Anonymously
+          </button>
+        </div>
+      </div>
+      <div class="m-row">
+        <div>
+          <label class="f-lbl">Post Type</label>
+          <select class="m-sel" id="mType" onchange="checkHelp()">
+            <option>Short Update</option><option>Article</option>
+            <option>Legal News</option><option>Help Request</option>
+          </select>
+        </div>
+        <div>
+          <label class="f-lbl">Category</label>
+          <select class="m-sel" id="mCat">
+            <option>Consumer Rights</option><option>Property Law</option>
+            <option>Family Law</option><option>Employment</option>
+            <option>Criminal Law</option><option>Women Safety</option>
+            <option>RTI</option><option>Tenant Rights</option>
+          </select>
+        </div>
+      </div>
+      <label class="f-lbl">Content</label>
+      <textarea class="f-ta" id="mContent" style="min-height:150px" placeholder="What do you want to share?" oninput="upBtn()"></textarea>
+      <div id="helpWarn" style="display:none;margin-top:10px" class="help-warn">
+        ℹ️ Visible to all advocates. Avoid sharing bank details or exact addresses publicly.
+      </div>
+      <div class="m-foot">
+        <div style="display:flex;gap:4px">
+          <button class="ic-sm">🖼️</button>
+          <button class="ic-sm">🎥</button>
+          <button class="ic-sm">📄</button>
+        </div>
+        <button class="btn-a" onclick="submitPost()" id="postBtn" disabled style="opacity:.5">Publish Post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RETWEET MODAL ══ -->
+<div class="modal-ov" id="retweetModal" style="display:none" onclick="closeRTBg(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="m-head">
+      <div class="m-ic">🔁</div>
+      <div class="m-title">Retweet to Community Feed</div>
+      <button onclick="closeRetweet()" style="margin-left:auto;background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div class="m-body">
+      <!-- Original article preview -->
+      <div style="background:var(--s50);border:1px solid var(--s200);border-radius:6px;padding:14px;margin-bottom:18px">
+        <div style="font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px" id="rtTag"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy);line-height:1.4;margin-bottom:6px" id="rtTitle"></div>
+        <div style="font-size:11px;color:var(--s400)" id="rtMeta"></div>
+      </div>
+      <label class="f-lbl">Your Caption <span style="color:var(--s400);font-weight:400;text-transform:none;letter-spacing:0">(min 50 characters)</span></label>
+      <textarea class="f-ta" id="rtCaption" style="min-height:100px"
+        placeholder="Add your thoughts on this news — what does it mean for Indians? How does it affect citizens?..."
+        oninput="checkRTBtn()"></textarea>
+      <div style="font-size:11px;color:var(--s400);margin-top:6px;text-align:right" id="rtCharCount">0 / 50 min</div>
+      <div class="m-foot" style="margin-top:16px">
+        <div style="font-size:11px;color:var(--s400)">📎 Source credit auto-attached</div>
+        <button class="btn-a" onclick="submitRetweet()" id="rtBtn" disabled style="opacity:.5">🔁 Retweet to Feed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = new URLSearchParams(location.search).get('api') || 'http://localhost:8000';
+
+const TRENDING = [
+  { icon:'🛡️', label:'Consumer Rights', count:'240 active', style:'background:#ECFDF5;color:#065F46' },
+  { icon:'⚖️', label:'Tenant Rights',   count:'156 active', style:'background:#EFF6FF;color:#1E40AF' },
+  { icon:'🔥', label:'Property Law',    count:'98 active',  style:'background:#FFF7ED;color:#C2410C' },
+  { icon:'📈', label:'Women Safety',    count:'87 active',  style:'background:#F5F3FF;color:#5B21B6' },
+];
+
+const SIGNALS = [
+  { icon:'🕐', name:'Recency',            max:100,  col:'#B45309', desc:'Decays linearly over 48h. Fresh post = 100 pts; 48h old = 0 pts.' },
+  { icon:'❤️', name:'Engagement',         max:60,   col:'#DC2626', desc:'reactions_count × 2 + comments_count × 4. Log-scaled, capped at 60.' },
+  { icon:'🏅', name:'Author Credibility', max:20,   col:'#2563EB', desc:'Verified advocate = 20 pts, admin = 10, citizen = 3, anonymous = 1.' },
+  { icon:'🎯', name:'Interest Match',     max:30,   col:'#059669', desc:'Exact match with user explicit_interests = 30 pts.' },
+  { icon:'🧠', name:'Semantic Similarity',max:50,   col:'#7C3AED', desc:'Cosine similarity of post embedding vs. user interest_vector (384-dim), scaled × 50.' },
+  { icon:'🚫', name:'Novelty Penalty',    max:-25,  col:'#DC2626', desc:'Deducted if user has seen 3+ posts on same topic in the last 2h.' },
+];
+
+const CATS = ['All','Legal News','Help Request','Article','Short Update',
+              'Consumer Rights','Property Law','Family Law','Criminal Law',
+              'Tenant Rights','RTI','Employment','Women Safety'];
+
+let S = {
+  posts:[],users:[],currentUser:null,activeCat:'All',liked:{},isAnon:false,
+  news:[],newsFiltered:[],activeNewsTag:'All',
+  rtArticle:null,
+};
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  try { const r = await fetch(API + path, { ...opts, mode:'cors' }); return r.ok ? r.json() : null; }
+  catch { return null; }
+}
+function interact(postId, action, durationMs = 0) {
+  if (!S.currentUser) return;
+  api('/interact', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ user_id: S.currentUser, post_id: postId, action, duration_ms: durationMs }) });
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const timeAgo = iso => {
+  const d = (Date.now() - new Date(iso)) / 1000;
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d/60) + 'm ago';
+  if (d < 86400) return Math.floor(d/3600) + 'h ago';
+  return Math.floor(d/86400) + 'd ago';
+};
+const initials = s => s ? s.split(/[-_ ]/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase() : '?';
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+
+function goView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const vid = 'view' + name[0].toUpperCase() + name.slice(1);
+  const el = document.getElementById(vid);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nl').forEach(l => l.classList.remove('active'));
+  const b = document.getElementById('nav' + name[0].toUpperCase() + name.slice(1));
+  if (b) b.classList.add('active');
+  if (name === 'signals') renderSignals();
+  if (name === 'news' && S.news.length === 0) loadNews();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  renderTrending();
+  renderCatTabs();
+  renderSignals();
+  await checkHealth();
+  await loadUsers();
+  loadSidebarNews(); // load news for sidebar in background
+}
+
+async function checkHealth() {
+  const el = document.getElementById('apiBadge');
+  const data = await api('/health');
+  if (!data) {
+    el.className = 'api-badge b-err';
+    el.textContent = '❌ Backend offline — run: uvicorn app.main:app --reload';
+  } else {
+    el.className = 'api-badge b-ok';
+    el.textContent = data.demo_mode ? '✅ Connected · Demo mode' : `✅ Connected · ${data.database}`;
+  }
+}
+
+async function loadUsers() {
+  const data = await api('/demo/users');
+  if (!data) return;
+  S.users = data.users || [];
+  const sel = document.getElementById('userSel');
+  sel.innerHTML = S.users.map(u => `<option value="${u.user_id}">${u.name}</option>`).join('');
+  if (S.users.length) switchUser(S.users[0].user_id);
+}
+
+function switchUser(userId) {
+  S.currentUser = userId;
+  const u = S.users.find(x => x.user_id === userId) || {};
+  const av = initials(u.name);
+  ['navAv','compAv','modalAv'].forEach(id => document.getElementById(id).textContent = av);
+  document.getElementById('modalUser').textContent = u.name || userId;
+  const exp = u.explicit_interests || [], imp = (u.implicit_interests || []).slice(0,3);
+  document.getElementById('intPills').innerHTML = exp.length
+    ? exp.map(i=>`<span class="i-pill">${i}</span>`).join('') + imp.map(i=>`<span class="i-impl">${i}</span>`).join('')
+    : '<p style="font-size:13px;color:var(--s400)">No interests configured</p>';
+  loadFeed();
+}
+
+// ── FEED ──────────────────────────────────────────────────────────────────────
+function renderCatTabs() {
+  document.getElementById('catTabs').innerHTML = CATS.map(c =>
+    `<button class="cat-tab ${S.activeCat===c?'active':''}" onclick="filterCat('${c}')">${c}</button>`
+  ).join('');
+}
+function filterCat(cat) {
+  S.activeCat = cat; renderCatTabs();
+  document.getElementById('clrBtn').style.display = cat === 'All' ? 'none' : '';
+  const posts = cat === 'All' ? S.posts : S.posts.filter(p => p.type===cat||p.primary_category===cat||p.category===cat);
+  renderPosts(posts);
+}
+function clearCat() { filterCat('All'); }
+
+async function loadFeed() {
+  if (!S.currentUser) return;
+  document.getElementById('feedPosts').innerHTML = skels(3);
+  document.getElementById('resLbl').textContent = 'Ranking posts…';
+  const data = await api(`/feed/${S.currentUser}?limit=20&tab=foryou`);
+  if (!data) {
+    document.getElementById('feedPosts').innerHTML = `<div class="empty"><div class="empty-ic">📡</div><div class="empty-t">Cannot reach backend</div><div class="empty-s">uvicorn app.main:app --reload</div></div>`;
+    document.getElementById('resLbl').textContent = 'Error'; return;
+  }
+  S.posts = data.posts || [];
+  document.getElementById('postCount').textContent = S.posts.length + '+';
+  filterCat(S.activeCat);
+  if (S.posts.length > 0) interact(S.posts[0].id, 'read');
+}
+
+function renderPosts(posts) {
+  document.getElementById('resLbl').textContent =
+    `${posts.length} post${posts.length!==1?'s':''}${S.activeCat!=='All'?' · '+S.activeCat:''}`;
+  document.getElementById('feedPosts').innerHTML = posts.length
+    ? posts.map((p,i) => postHtml(p,i)).join('')
+    : `<div class="empty"><div class="empty-ic">📰</div><div class="empty-t">No posts here</div><div class="empty-s">Be the first to share something.</div></div>`;
+}
+
+function postHtml(p, i) {
+  const type = p.type || 'Short Update';
+  const cat  = p.primary_category || p.category || 'General Legal';
+  const role = p.is_anonymous ? 'anon' : (p.author_role || 'citizen');
+  const name = p.is_anonymous ? 'Public Voice' : (p.author_name || p.author_id || 'Unknown');
+  const liked = S.liked[p.id];
+  const reactions = (p.reactions_count||0) + (liked?1:0);
+  const scoreHtml = p._score !== undefined ? `<span class="score">⚡ ${Math.round(p._score)}</span>` : '';
+  const isRetweet = p.is_retweet;
+  const accentMap = {'Legal News':'a-news','Help Request':'a-help','Article':'a-article'};
+  const typeMap   = {'Legal News':'t-news','Help Request':'t-help','Article':'t-article','Short Update':'t-update'};
+  const avMap     = {advocate:'av-adv',anon:'av-anon',citizen:'av-cit'};
+  const bdgMap    = {advocate:'r-adv',anon:'r-anon',citizen:'r-cit'};
+  const bdgLbl    = {advocate:'Advocate',anon:'Anonymous',citizen:'Citizen'};
+  return `
+  <div class="post-card" style="animation-delay:${i*0.04}s">
+    <div class="post-accent ${accentMap[type]||'a-update'}"></div>
+    <div class="post-body">
+      ${isRetweet ? `<div style="font-size:10px;color:var(--em-t);background:var(--em-bg);border:1px solid #A7F3D0;border-radius:4px;padding:4px 10px;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px">🔁 Retweeted from <strong>${esc(p.original_source_name||'News')}</strong></div>` : ''}
+      <div class="post-hdr">
+        <div class="post-ar">
+          <div class="post-av ${avMap[role]||'av-cit'}">${p.is_anonymous?'?':initials(name)}</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+              <span class="post-name">${esc(name)}</span>
+              <span class="role-bdg ${bdgMap[role]||'r-cit'}">${bdgLbl[role]||'Citizen'}</span>
+              ${(p.verified||p.author_verified)?'<span style="color:var(--em);font-size:13px">✓</span>':''}
+            </div>
+            <div class="post-time">${timeAgo(p.created_at)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span class="type-bdg ${typeMap[type]||'t-update'}">${esc(type)}</span>
+          <button class="act-sq" onclick="reportPost('${p.id}')" title="Report">🚩</button>
+        </div>
+      </div>
+      <div class="post-cat">#${cat.replace(/ /g,'')}</div>
+      <div class="post-txt clamp" id="pt-${p.id}">${esc(p.content||'')}</div>
+      ${type==='Help Request'?'<div class="help-warn" style="margin-top:12px">⚠️ Do not share sensitive personal details publicly.</div>':''}
+      ${isRetweet&&p.original_source_url?`<a href="${esc(p.original_source_url)}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--blue-t);margin-top:8px;text-decoration:none">🔗 Read original article ›</a>`:''}
+      <div class="post-acts">
+        <button class="act ${liked?'liked':''}" onclick="toggleLike('${p.id}')">${liked?'❤️':'🤍'} ${reactions}</button>
+        <button class="act" onclick="toggleCmts('${p.id}')">💬 ${p.comments_count||0}</button>
+        <button class="act" onclick="document.getElementById('pt-${p.id}').classList.toggle('clamp')">↕️</button>
+        <button class="act-sq" onclick="sharePost('${p.id}')">📤</button>
+        ${scoreHtml}
+      </div>
+    </div>
+    <div class="cmts" id="cmts-${p.id}" style="display:none">
+      <div class="cmt-form">
+        <input class="cmt-in" id="ci-${p.id}" placeholder="Add a comment…" onkeydown="if(event.key==='Enter')submitCmt('${p.id}')"/>
+        <button class="btn-send" onclick="submitCmt('${p.id}')">➤</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleLike(id) { S.liked[id]=!S.liked[id]; interact(id,'like'); filterCat(S.activeCat); }
+function toggleCmts(id) {
+  const el = document.getElementById(`cmts-${id}`);
+  const opening = el.style.display==='none';
+  el.style.display = opening?'block':'none';
+  if (opening) interact(id,'expand');
+}
+function reportPost(id) { interact(id,'report'); toast('Post reported. Our team will review it.'); }
+function sharePost(id) { interact(id,'share'); toast('Share link copied!'); }
+function submitCmt(id) {
+  const inp = document.getElementById(`ci-${id}`);
+  const text = inp.value.trim(); if (!text) return;
+  const sec = document.getElementById(`cmts-${id}`);
+  const uname = S.users.find(u=>u.user_id===S.currentUser)?.name||'You';
+  const div = document.createElement('div'); div.className='cmt';
+  div.innerHTML=`<div class="cmt-av">👤</div><div class="cmt-body"><span class="cmt-name">${esc(uname)}</span><span class="cmt-time">just now</span><p class="cmt-txt">${esc(text)}</p></div>`;
+  sec.insertBefore(div, sec.querySelector('.cmt-form'));
+  inp.value=''; interact(id,'comment'); toast('Comment posted');
+}
+
+function skels(n) {
+  return Array(n).fill(0).map((_,i)=>`
+    <div class="post-card skel" style="animation-delay:${i*0.08}s">
+      <div class="post-accent a-update" style="opacity:.3"></div>
+      <div class="post-body">
+        <div style="display:flex;gap:12px;margin-bottom:14px">
+          <div class="sk" style="width:38px;height:38px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1"><div class="sk" style="height:12px;width:40%;margin-bottom:8px;border-radius:4px"></div><div class="sk" style="height:10px;width:60%;border-radius:4px"></div></div>
+        </div>
+        <div class="sk" style="height:12px;margin-bottom:8px;border-radius:4px"></div>
+        <div class="sk" style="height:12px;width:85%;margin-bottom:8px;border-radius:4px"></div>
+        <div class="sk" style="height:12px;width:70%;margin-bottom:16px;border-radius:4px"></div>
+        <div style="display:flex;gap:8px;border-top:1px solid var(--s100);padding-top:12px">
+          <div class="sk" style="height:30px;width:80px;border-radius:4px"></div>
+          <div class="sk" style="height:30px;width:80px;border-radius:4px"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────────
+function renderTrending() {
+  document.getElementById('trendEl').innerHTML = TRENDING.map(t =>
+    `<div class="tr-item" onclick="filterCat('${t.label}')">
+      <div class="tr-ic" style="${t.style}">${t.icon}</div>
+      <div><div class="tr-lbl">${t.label}</div><div class="tr-cnt">${t.count}</div></div>
+      <span class="tr-arr">›</span>
+    </div>`).join('');
+}
+
+async function loadSidebarNews() {
+  const data = await api('/news/live?limit=4');
+  const el = document.getElementById('newsEl');
+  if (!data || !data.items) {
+    el.innerHTML = '<div style="padding:14px 18px;font-size:12px;color:var(--s400)">News unavailable</div>';
+    return;
+  }
+  el.innerHTML = data.items.map(n => `
+    <div class="news-item" onclick="${n.url?`window.open('${esc(n.url)}','_blank')`:''}">
+      <div class="news-tag">${esc(n.tag)}</div>
+      <div class="news-title">${esc(n.title)}</div>
+      <div class="news-time">${esc(n.source)} · ${esc(n.time)}</div>
+    </div>`).join('');
+}
+
+// ── NEWS PAGE ─────────────────────────────────────────────────────────────────
+async function loadNews(forceRefresh = false) {
+  const grid = document.getElementById('newsGrid');
+  const badge = document.getElementById('newsBadge');
+  const btn = document.getElementById('refreshBtn');
+
+  grid.innerHTML = '<div class="news-loading"><div class="spinner"></div> Fetching live Indian legal news…</div>';
+  badge.textContent = '⏳ Fetching…';
+  btn.classList.add('spinning');
+
+  const url = '/news/live?limit=10' + (forceRefresh ? '&refresh=true' : '');
+  const data = await api(url);
+
+  btn.classList.remove('spinning');
+
+  if (!data || !data.items) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📡</div><div class="empty-t">Cannot reach news endpoint</div><div class="empty-s">Make sure the backend is running</div></div>`;
+    badge.textContent = '❌ Failed to load';
+    return;
+  }
+
+  S.news = data.items;
+  S.newsFiltered = [...S.news];
+
+  const sourceLabel = { gnews_api:'GNews API', livelaw_rss:'LiveLaw RSS', barandbench_rss:'Bar & Bench RSS', google_news_rss:'Google News RSS', google_custom_search:'Google CSE', static_fallback:'Static Fallback' };
+  const src = sourceLabel[data.source] || data.source;
+  badge.innerHTML = `<span class="live-dot"></span> ${src} ${data.cached ? '<span class="cached-badge">cached</span>' : '· fresh'}`;
+
+  renderNewsGrid(S.newsFiltered);
+}
+
+function filterNews(tag, btn) {
+  S.activeNewsTag = tag;
+  document.querySelectorAll('.nf-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  S.newsFiltered = tag === 'All' ? S.news : S.news.filter(n => n.tag === tag);
+  renderNewsGrid(S.newsFiltered);
+}
+
+function renderNewsGrid(items) {
+  const grid = document.getElementById('newsGrid');
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📰</div><div class="empty-t">No news in this category</div><div class="empty-s">Try a different filter or refresh.</div></div>`;
+    return;
+  }
+  grid.innerHTML = items.map((n, i) => `
+    <div class="news-card" style="animation-delay:${i*0.06}s">
+      ${n.image
+        ? `<img class="news-card-img" src="${esc(n.image)}" alt="" onerror="this.parentElement.querySelector('.news-card-img-ph').style.display='flex';this.remove()" />`
+        : ''}
+      <div class="news-card-img-ph" style="${n.image?'display:none':''}">📰</div>
+      <div class="news-card-body">
+        <div class="news-card-tag">${esc(n.tag)}</div>
+        <div class="news-card-title">${esc(n.title)}</div>
+        ${n.summary ? `<div class="news-card-summary">${esc(n.summary)}</div>` : ''}
+        <div class="news-card-foot">
+          <div class="news-card-meta">
+            <div class="news-card-source">${esc(n.source)}</div>
+            <div class="news-card-time">${esc(n.time)}</div>
+          </div>
+          <div class="news-card-actions">
+            ${n.url ? `<a class="btn-read" href="${esc(n.url)}" target="_blank">🔗 Read</a>` : ''}
+            <button class="btn-retweet" onclick="openRetweet(${i})">🔁 Retweet</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── RETWEET MODAL ─────────────────────────────────────────────────────────────
+function openRetweet(idx) {
+  if (!S.currentUser) { toast('Select a user first', 'err'); return; }
+  const n = S.newsFiltered[idx];
+  S.rtArticle = n;
+  document.getElementById('rtTag').textContent = n.tag;
+  document.getElementById('rtTitle').textContent = n.title;
+  document.getElementById('rtMeta').textContent = `${n.source} · ${n.time}`;
+  document.getElementById('rtCaption').value = '';
+  document.getElementById('rtCharCount').textContent = '0 / 50 min';
+  document.getElementById('rtBtn').disabled = true;
+  document.getElementById('rtBtn').style.opacity = '.5';
+  document.getElementById('retweetModal').style.display = 'flex';
+}
+
+function closeRetweet() { document.getElementById('retweetModal').style.display = 'none'; }
+function closeRTBg(e) { if (e.target.id === 'retweetModal') closeRetweet(); }
+
+function checkRTBtn() {
+  const len = document.getElementById('rtCaption').value.trim().length;
+  document.getElementById('rtCharCount').textContent = `${len} / 50 min`;
+  const ok = len >= 50;
+  document.getElementById('rtBtn').disabled = !ok;
+  document.getElementById('rtBtn').style.opacity = ok ? '1' : '.5';
+}
+
+async function submitRetweet() {
+  const caption = document.getElementById('rtCaption').value.trim();
+  if (caption.length < 50) { toast('Caption must be at least 50 characters', 'err'); return; }
+  const n = S.rtArticle;
+  const content = `${caption}\n\n— Retweeted from ${n.source}: ${n.title}`;
+  closeRetweet();
+  toast('Retweeting to community feed…');
+
+  const postId = 'rt-' + Date.now();
+  await api('/enrich', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      post_id: postId,
+      content,
+      is_retweet: true,
+      original_source_url: n.url || '',
+      original_source_name: n.source || '',
+    }),
+  });
+
+  toast('Retweet published to Justice Feed! ✓');
+  setTimeout(loadFeed, 1500);
+}
+
+// ── COMPOSER ──────────────────────────────────────────────────────────────────
+function openModal()  { document.getElementById('compModal').style.display = 'flex'; }
+function closeModal() { document.getElementById('compModal').style.display = 'none'; }
+function closeBg(e)   { if (e.target.id === 'compModal') closeModal(); }
+function upBtn() {
+  const btn = document.getElementById('postBtn'), val = document.getElementById('mContent').value.trim();
+  btn.disabled = !val; btn.style.opacity = val ? '1' : '.5';
+}
+function checkHelp() {
+  document.getElementById('helpWarn').style.display = document.getElementById('mType').value === 'Help Request' ? 'block' : 'none';
+}
+function toggleAnon() {
+  S.isAnon = !S.isAnon; const btn = document.getElementById('anonBtn');
+  btn.style.background = S.isAnon ? 'var(--navy)' : 'var(--s100)';
+  btn.style.color      = S.isAnon ? 'white' : 'var(--s600)';
+  btn.textContent      = S.isAnon ? 'Anonymous ON' : 'Post Anonymously';
+}
+
+async function submitPost() {
+  const content = document.getElementById('mContent').value.trim(); if (!content) return;
+  const postId = 'post-' + Date.now();
+  closeModal(); document.getElementById('mContent').value = '';
+  toast('Post published! LexFeed is classifying it…');
+  await api('/enrich', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ post_id: postId, content }) });
+  setTimeout(loadFeed, 1500);
+}
+
+// ── ENRICH PAGE ───────────────────────────────────────────────────────────────
+async function runEnrich() {
+  const content = document.getElementById('eContent').value.trim();
+  if (!content) { toast('Paste some content first', 'err'); return; }
+  const btn = document.getElementById('eBtn'), resEl = document.getElementById('eResult');
+  btn.disabled = true; btn.textContent = '⏳ Enriching…';
+  resEl.style.display = 'block';
+  resEl.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:8px"><div class="spinner"></div><span style="font-size:13px;color:var(--s500)">Calling Groq LLM via /enrich…</span></div>';
+  const postId = document.getElementById('eId').value.trim() || 'post-' + Date.now();
+  const data = await api('/enrich', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ post_id: postId, content }) });
+  btn.disabled = false; btn.textContent = '✨ Enrich Post';
+  if (!data) {
+    resEl.innerHTML = `<div style="color:var(--red);font-size:13px;padding:8px">❌ Backend unreachable.</div>`; return;
+  }
+  const tags = data.tags || {}, urg = tags.urgency || 'low';
+  const urgS = (urg==='high'||urg==='critical') ? 'background:var(--red-bg);color:var(--red-t);border-color:#FECACA' : 'background:var(--s100);color:var(--s600);border-color:var(--s200)';
+  resEl.className = 'e-result';
+  resEl.innerHTML = `
+    <div class="r-tags">
+      <span class="type-bdg t-article">${esc(tags.primary_category||'Unknown')}</span>
+      <span class="type-bdg t-update">${esc(tags.post_type||'Short Update')}</span>
+      <span class="type-bdg" style="${urgS}">${urg} urgency</span>
+    </div>
+    <div class="r-row">
+      <strong>Post ID:</strong> ${esc(data.post_id)}<br>
+      <strong>Summary:</strong> ${esc(tags.summary||'—')}<br>
+      <strong>Legal acts:</strong> ${esc((tags.legal_acts||[]).join(', ')||'None detected')}<br>
+      <strong>Tags:</strong> ${esc((tags.enriched_tags||[]).join(', ')||'—')}
+    </div>`;
+  toast('Post enriched and stored ✓');
+}
+
+// ── SIGNALS ───────────────────────────────────────────────────────────────────
+function renderSignals() {
+  document.getElementById('sigCards').innerHTML = SIGNALS.map(s => `
+    <div class="sig-card">
+      <span style="font-size:22px;flex-shrink:0;margin-top:2px">${s.icon}</span>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;margin-bottom:4px">
+          <span class="sig-name">${s.name}</span>
+          <span style="font-size:12px;font-weight:700;color:${s.col};margin-left:auto">${s.max>0?'+':''}${s.max} pts max</span>
+        </div>
+        <p class="sig-desc">${s.desc}</p>
+      </div>
+    </div>`).join('');
+}
+
+init();
+</script>
+</body>
+</html>
