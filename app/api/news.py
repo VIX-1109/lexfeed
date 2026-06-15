@@ -9,12 +9,29 @@ import httpx
 from fastapi import APIRouter
 
 from app.config import GOOGLE_API_KEY, GOOGLE_CSE_ID
+from app.database import fetch_legal_news, replace_legal_news
 
 router = APIRouter(prefix="/news", tags=["news"])
 
 # ── CACHE ─────────────────────────────────────────────────────────────────────
+# Two layers: (1) in-memory for speed within one server process,
+#             (2) Supabase legal_news table so the batch survives restarts/sleep
+#                 and NyayaSetu can read the same news.
 _cache: dict = {"items": [], "fetched_at": None, "source": None}
 CACHE_TTL_SECONDS = 7200  # 2 hours
+
+
+def _row_to_item(row: dict) -> dict:
+    """Map a legal_news DB row back to the API/frontend shape."""
+    return {
+        "tag": row.get("tag"),
+        "title": row.get("title"),
+        "summary": row.get("summary") or "",
+        "source": row.get("source"),
+        "url": row.get("url"),
+        "image": row.get("image"),
+        "time": row.get("time_label") or "Live",
+    }
 
 
 def _cache_valid() -> bool:
@@ -246,6 +263,7 @@ async def _fetch_google_custom_search(limit: int) -> list[dict]:
 async def get_live_news(limit: int = 6, refresh: bool = False):
     limit = max(1, min(limit, 10))
 
+    # Layer 1 — in-memory cache (fastest, per-process)
     if _cache_valid() and not refresh:
         return {
             "source": _cache["source"], "cached": True,
@@ -253,6 +271,22 @@ async def get_live_news(limit: int = 6, refresh: bool = False):
             "gnews_configured": bool(os.getenv("GNEWS_API_KEY")),
             "items": _cache["items"][:limit],
         }
+
+    # Layer 2 — Supabase cache (survives restarts / free-tier sleep)
+    if not refresh:
+        try:
+            rows = fetch_legal_news(CACHE_TTL_SECONDS)
+            if rows:
+                items = [_row_to_item(r) for r in rows]
+                _set_cache(items, "supabase_cache")
+                return {
+                    "source": "supabase_cache", "cached": True,
+                    "fetched_at": _cache["fetched_at"].isoformat(),
+                    "gnews_configured": bool(os.getenv("GNEWS_API_KEY")),
+                    "items": items[:limit],
+                }
+        except Exception as e:
+            print(f"[news] Supabase read failed, fetching fresh: {e}")
 
     source = "static_fallback"
     items = []
@@ -291,6 +325,14 @@ async def get_live_news(limit: int = 6, refresh: bool = False):
         source = "static_fallback"
 
     _set_cache(items, source)
+
+    # Persist to Supabase (replace-on-refresh = self-cleaning, ~10 rows max).
+    # Skip the static "unavailable" placeholder so we don't store an error state.
+    if source != "static_fallback":
+        try:
+            replace_legal_news(items)
+        except Exception as e:
+            print(f"[news] Supabase save failed (serving from memory): {e}")
 
     return {
         "source": source, "cached": False,

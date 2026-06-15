@@ -117,6 +117,36 @@ def upsert_post_tags(post_id: str, tags: dict):
     db.table("post_tags").upsert({"post_id": post_id, **tags}).execute()
 
 
+def fetch_legal_news(within_seconds: int = 7200):
+    """Read the most recent cached news batch from Supabase (if still fresh)."""
+    if use_demo_store():
+        return []
+    db = get_supabase()
+    from datetime import datetime, timezone, timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(seconds=within_seconds)).isoformat()
+    res = (
+        db.table("legal_news")
+        .select("*")
+        .gte("fetched_at", cutoff)
+        .order("position")
+        .execute()
+    )
+    return res.data or []
+
+
+def replace_legal_news(items: list):
+    """Atomically replace the stored news batch (delete old + insert new).
+
+    Self-cleaning: the table never holds more than one batch, so space stays
+    tiny. Goes through a SECURITY DEFINER function so the anon key cannot
+    write to the table directly.
+    """
+    if use_demo_store():
+        return
+    db = get_supabase()
+    db.rpc("replace_legal_news", {"p_items": items}).execute()
+
+
 def log_interaction(user_id: str, post_id: str, action: str, duration_ms: int = 0):
     if use_demo_store():
         demo_store.log_interaction(user_id, post_id, action, duration_ms)
