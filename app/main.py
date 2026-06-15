@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from app.api.feed import router as feed_router
 from app.api.interact import router as interact_router
 from app.api.enrich import router as enrich_router
@@ -42,9 +44,13 @@ app.include_router(news_router)
 
 @app.get("/")
 async def root():
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
     return {
         "service": "LexFeed",
         "version": "1.0.0",
         "docs": "/docs",
         "endpoints": ["/feed/{user_id}", "/interact", "/enrich", "/health", "/demo/users", "/news/live"],
     }
+

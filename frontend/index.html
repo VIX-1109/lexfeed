@@ -480,7 +480,7 @@ body{font-family:var(--sans);background:var(--s50);color:var(--navy);font-size:1
 </div>
 
 <script>
-const API = new URLSearchParams(location.search).get('api') || 'http://localhost:8000';
+const API = new URLSearchParams(location.search).get('api') || window.location.origin;
 
 const CATS = ['All','Legal News','Help Request','Article','Short Update',
               'Consumer Rights','Property Law','Family Law','Criminal Law',
