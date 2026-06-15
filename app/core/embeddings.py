@@ -1,13 +1,16 @@
-from sentence_transformers import SentenceTransformer
 import numpy as np
 from app.config import EMBEDDING_MODEL
 
-# Load model once — runs locally, no API needed
+# Load model once — runs locally, no API needed.
+# NOTE: sentence_transformers/torch are imported lazily inside get_model() so
+# that the light paths (feed ranking, news) don't pull torch into memory. Only
+# code that actually embeds text (enrichment / backfill) pays that cost.
 _model = None
 
-def get_model() -> SentenceTransformer:
+def get_model():
     global _model
     if _model is None:
+        from sentence_transformers import SentenceTransformer
         print(f"Loading embedding model: {EMBEDDING_MODEL}")
         _model = SentenceTransformer(EMBEDDING_MODEL)
     return _model

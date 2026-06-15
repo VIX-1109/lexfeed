@@ -76,9 +76,12 @@ def _get_social_graph_candidates(db, user_id: str, excluded_ids: list, limit: in
 
 
 def _get_seen_post_ids(user_id: str) -> list:
-    """Get post IDs the user has already seen in last 24h."""
+    """Get post IDs the user saw recently — only if the seen-filter is enabled."""
+    from app.config import SEEN_FILTER_HOURS
+    if SEEN_FILTER_HOURS <= 0:
+        return []
     from app.database import fetch_seen_posts
-    return fetch_seen_posts(user_id, within_hours=24)
+    return fetch_seen_posts(user_id, within_hours=SEEN_FILTER_HOURS)
 
 
 def _get_reported_post_ids(user_id: str) -> list:

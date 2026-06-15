@@ -20,6 +20,11 @@ FEED_SIZE = 20
 MAX_POSTS_PER_TOPIC = 3
 RECENCY_DECAY_HOURS = 48
 
+# Hide posts a user already saw in the last N hours. Good for high-traffic
+# platforms, but on a small/new platform it empties the feed — so default OFF.
+# Set SEEN_FILTER_HOURS=24 once there's enough post volume.
+SEEN_FILTER_HOURS = int(os.getenv("SEEN_FILTER_HOURS", "0"))
+
 # Legal categories for classification
 LEGAL_CATEGORIES = [
     "Property Law",
