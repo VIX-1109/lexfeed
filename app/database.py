@@ -84,6 +84,17 @@ def fetch_post_embedding(post_id: str):
     return res.data
 
 
+def fetch_post_embeddings_batch(post_ids: list) -> dict:
+    """Fetch embeddings for multiple posts in a single query. Returns {post_id: row}."""
+    if not post_ids:
+        return {}
+    if use_demo_store():
+        return {pid: demo_store.fetch_post_embedding(pid) for pid in post_ids if demo_store.fetch_post_embedding(pid)}
+    db = get_supabase()
+    res = db.table("post_embeddings").select("*").in_("post_id", post_ids).execute()
+    return {r["post_id"]: r for r in (res.data or [])}
+
+
 def upsert_post_embedding(post_id: str, embedding: list, enriched_tags: list = None, legal_topics: list = None, urgency_score: int = 1):
     if use_demo_store():
         demo_store.upsert_post_embedding(post_id, embedding, enriched_tags, legal_topics, urgency_score)
