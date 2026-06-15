@@ -64,6 +64,14 @@ def _time_ago(published_at: Optional[str]) -> str:
         return "Live"
 
 
+def _clean(text: Optional[str]) -> str:
+    """Tidy text pulled from RSS feeds — fix stray replacement chars/whitespace."""
+    if not text:
+        return ""
+    # U+FFFD in these legal headlines is almost always a broken apostrophe
+    return text.replace("�", "'").strip()
+
+
 def _tag_from_title(title: str) -> str:
     t = title.lower()
     if "supreme court" in t:
@@ -148,8 +156,9 @@ async def _fetch_barandbench_rss(limit: int) -> list[dict]:
             print(f"[Bar & Bench RSS] status: {res.status_code}")
             res.raise_for_status()
 
-        # Try parsing — handle both RSS and Atom formats
-        root = ET.fromstring(res.text)
+        # Parse raw bytes so the XML's own encoding declaration is honored
+        # (avoids mojibake like "don�t" from mis-decoded smart quotes)
+        root = ET.fromstring(res.content)
         ns = root.tag.split('}')[0].strip('{') if '}' in root.tag else ''
 
         items = []
@@ -176,8 +185,8 @@ async def _fetch_barandbench_rss(limit: int) -> list[dict]:
                         published_at = None
             items.append({
                 "tag":     _tag_from_title(title),
-                "title":   title.strip(),
-                "summary": item.findtext("description") or "",
+                "title":   _clean(title),
+                "summary": _clean(item.findtext("description")),
                 "source":  "Bar & Bench",
                 "url":     link,
                 "image":   None,
@@ -199,7 +208,7 @@ async def _fetch_google_news_rss(limit: int) -> list[dict]:
             res = await client.get(url)
             print(f"[Google News RSS] status: {res.status_code}")
             res.raise_for_status()
-        root = ET.fromstring(res.text)
+        root = ET.fromstring(res.content)
         items = []
         for item in root.findall("./channel/item")[:limit * 2]:
             title = item.findtext("title") or "Legal news update"
@@ -213,7 +222,7 @@ async def _fetch_google_news_rss(limit: int) -> list[dict]:
                     published_at = None
             items.append({
                 "tag":     _tag_from_title(title),
-                "title":   title,
+                "title":   _clean(title),
                 "summary": "",
                 "source":  "Google News",
                 "url":     link,
