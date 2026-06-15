@@ -29,8 +29,38 @@ body{font-family:var(--sans);background:var(--s50);color:var(--navy);font-size:1
 .nl:hover{background:var(--s100);color:var(--navy)}
 .nl.active{color:var(--amber);background:var(--amber-bg)}
 .nav-right{display:flex;align-items:center;gap:10px}
-.user-sel{background:var(--s50);border:1px solid var(--s200);border-radius:4px;padding:5px 8px;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--navy);outline:none;cursor:pointer;max-width:190px}
-.nav-av{width:32px;height:32px;border-radius:50%;background:var(--amber-bg);border:2px solid rgba(180,83,9,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);flex-shrink:0}
+/* Account menu (matches NyayaSetu AccountMenu) */
+.btn-login{background:var(--navy);color:white;border:none;border-radius:4px;height:40px;padding:0 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);box-shadow:0 1px 3px rgba(0,0,0,.1);transition:background .15s}
+.btn-login:hover{background:var(--navy-l)}
+.acct{position:relative}
+.acct-pill{display:flex;height:40px;align-items:center;gap:8px;border:1px solid var(--s200);background:white;border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer;transition:border-color .15s;font-family:var(--sans)}
+.acct-pill:hover{border-color:rgba(180,83,9,.4)}
+.acct-av{width:32px;height:32px;border-radius:50%;background:var(--amber-bg);border:1px solid rgba(180,83,9,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--amber);flex-shrink:0}
+.acct-meta{text-align:left;line-height:1.25}
+.acct-name{font-size:13px;font-weight:700;color:var(--navy);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-role{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--s500);font-weight:700}
+.acct-burger{color:var(--s500);font-size:15px;line-height:1}
+@media(max-width:600px){.acct-meta{display:none}}
+.acct-dd{position:absolute;right:0;top:50px;width:280px;background:white;border:1px solid var(--s200);border-radius:4px;box-shadow:0 12px 32px rgba(0,0,0,.15);overflow:hidden;z-index:60;animation:su .15s ease}
+.acct-dd-head{padding:16px;border-bottom:1px solid var(--s100);display:flex;align-items:center;gap:12px}
+.acct-dd-av{width:40px;height:40px;border-radius:50%;background:var(--amber-bg);border:1px solid rgba(180,83,9,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--amber);flex-shrink:0}
+.acct-dd-name{font-size:14px;font-weight:700;color:var(--navy)}
+.acct-dd-sub{font-size:11px;color:var(--s500);margin-top:1px}
+.acct-sec{padding:8px 0;max-height:240px;overflow-y:auto}
+.acct-sec-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--s400);padding:6px 16px 4px}
+.acct-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;font-weight:600;color:var(--s700);cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:var(--sans);transition:background .12s}
+.acct-item:hover{background:var(--s50);color:var(--navy)}
+.acct-item.active{color:var(--amber)}
+.acct-item .check{margin-left:auto;color:var(--amber);font-weight:800}
+.acct-foot{border-top:1px solid var(--s100);padding:8px}
+.acct-logout{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;font-size:13px;font-weight:700;color:var(--red-t);background:none;border:none;border-radius:4px;cursor:pointer;font-family:var(--sans)}
+.acct-logout:hover{background:var(--red-bg)}
+.login-prompt{background:white;border:1px solid var(--s200);border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.04);padding:48px 32px;text-align:center}
+.login-prompt-ic{font-size:42px;margin-bottom:14px}
+.login-prompt-t{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--navy)}
+.login-prompt-s{font-size:13px;color:var(--s500);margin-top:8px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.7}
+.login-prompt-btn{margin-top:20px;background:var(--amber);color:white;border:none;border-radius:4px;height:44px;padding:0 28px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.login-prompt-btn:hover{background:var(--amber-l)}
 
 /* HERO */
 .hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-l) 100%);padding:40px 24px 0}
@@ -253,12 +283,7 @@ body{font-family:var(--sans);background:var(--s50);color:var(--navy);font-size:1
       <button class="nl active" id="navFeed" onclick="goView('feed')">Justice Feed</button>
       <button class="nl" id="navNews" onclick="goView('news')">📰 Legal News</button>
     </div>
-    <div class="nav-right">
-      <select class="user-sel" id="userSel" onchange="switchUser(this.value)">
-        <option value="">Loading users…</option>
-      </select>
-      <div class="nav-av" id="navAv">?</div>
-    </div>
+    <div class="nav-right" id="navRight"></div>
   </div>
 </nav>
 
@@ -470,8 +495,10 @@ const TRENDING_TOPICS = [
 
 let S = {
   posts:[],users:[],currentUser:null,activeCat:'All',activeTab:'foryou',liked:{},isAnon:false,
-  news:[],newsFiltered:[],activeNewsTag:'All',rtArticle:null,
+  news:[],newsFiltered:[],activeNewsTag:'All',rtArticle:null,menuOpen:false,
 };
+
+const LS_KEY = 'lexfeed_user';
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function api(path, opts = {}) {
@@ -512,6 +539,7 @@ function goView(name) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
+  renderAccount();
   renderCatPills();
   renderTrending();
   await checkHealth();
@@ -533,25 +561,147 @@ async function checkHealth() {
 
 async function loadUsers() {
   const data = await api('/demo/users');
-  if (!data) return;
+  if (!data) { renderAccount(); renderLoggedOutFeed(); return; }
   S.users = data.users || [];
-  const sel = document.getElementById('userSel');
-  sel.innerHTML = S.users.map(u => `<option value="${u.user_id}">${u.name}</option>`).join('');
-  if (S.users.length) switchUser(S.users[0].user_id);
+  // Restore previous session if any (feels like real auth across refreshes)
+  const saved = localStorage.getItem(LS_KEY);
+  if (saved && S.users.some(u => u.user_id === saved)) {
+    signIn(saved, true);
+  } else {
+    renderAccount();
+    renderLoggedOutFeed();
+  }
 }
 
-function switchUser(userId) {
+function currentUserObj() {
+  return S.users.find(x => x.user_id === S.currentUser) || null;
+}
+
+// ── ACCOUNT MENU (login / logout / switch profile) ──────────────────────────────
+function renderAccount() {
+  const el = document.getElementById('navRight');
+  const u = currentUserObj();
+
+  if (!u) {
+    el.innerHTML = `
+      <div class="acct">
+        <button class="btn-login" onclick="toggleMenu(event)">Login</button>
+        ${S.menuOpen ? loginDropdown() : ''}
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="acct">
+      <button class="acct-pill" onclick="toggleMenu(event)" aria-haspopup="menu" aria-expanded="${S.menuOpen}">
+        <span class="acct-av">${initials(u.name)}</span>
+        <span class="acct-meta">
+          <span class="acct-name">${esc(u.name)}</span>
+          <span class="acct-role">Citizen</span>
+        </span>
+        <span class="acct-burger">☰</span>
+      </button>
+      ${S.menuOpen ? accountDropdown(u) : ''}
+    </div>`;
+}
+
+function loginDropdown() {
+  return `
+    <div class="acct-dd" onclick="event.stopPropagation()">
+      <div class="acct-dd-head">
+        <div class="acct-dd-av">⚖️</div>
+        <div>
+          <div class="acct-dd-name">Sign in to LexFeed</div>
+          <div class="acct-dd-sub">Choose a profile to continue</div>
+        </div>
+      </div>
+      <div class="acct-sec">
+        <div class="acct-sec-lbl">Demo Profiles</div>
+        ${S.users.map(u => `
+          <button class="acct-item" onclick="signIn('${u.user_id}')">
+            <span class="acct-av" style="width:26px;height:26px;font-size:10px">${initials(u.name)}</span>
+            ${esc(u.name)}
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function accountDropdown(u) {
+  const others = S.users.filter(x => x.user_id !== u.user_id);
+  return `
+    <div class="acct-dd" onclick="event.stopPropagation()">
+      <div class="acct-dd-head">
+        <div class="acct-dd-av">${initials(u.name)}</div>
+        <div style="min-width:0">
+          <div class="acct-dd-name">${esc(u.name)}</div>
+          <div class="acct-dd-sub">${esc(u.user_id)}@lexfeed.demo</div>
+        </div>
+      </div>
+      <div class="acct-sec">
+        <div class="acct-sec-lbl">Switch Profile</div>
+        <button class="acct-item active" onclick="closeMenu()">
+          <span class="acct-av" style="width:26px;height:26px;font-size:10px">${initials(u.name)}</span>
+          ${esc(u.name)} <span class="check">✓</span>
+        </button>
+        ${others.map(o => `
+          <button class="acct-item" onclick="signIn('${o.user_id}')">
+            <span class="acct-av" style="width:26px;height:26px;font-size:10px;background:var(--s100);border-color:var(--s200);color:var(--s500)">${initials(o.name)}</span>
+            ${esc(o.name)}
+          </button>`).join('')}
+      </div>
+      <div class="acct-foot">
+        <button class="acct-logout" onclick="signOut()">⎋ Logout</button>
+      </div>
+    </div>`;
+}
+
+function toggleMenu(e) { if (e) e.stopPropagation(); S.menuOpen = !S.menuOpen; renderAccount(); }
+function closeMenu() { if (!S.menuOpen) return; S.menuOpen = false; renderAccount(); }
+document.addEventListener('mousedown', (e) => {
+  if (S.menuOpen && !e.target.closest('.acct')) closeMenu();
+});
+
+function signIn(userId, silent) {
   S.currentUser = userId;
-  const u = S.users.find(x => x.user_id === userId) || {};
+  S.menuOpen = false;
+  localStorage.setItem(LS_KEY, userId);
+  const u = currentUserObj() || {};
   const av = initials(u.name);
-  ['navAv','compAv','modalAv'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = av; });
-  document.getElementById('modalUser').textContent = u.name || userId;
+  ['compAv','modalAv'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = av; });
+  const mu = document.getElementById('modalUser'); if (mu) mu.textContent = u.name || userId;
   const exp = u.explicit_interests || [], imp = (u.implicit_interests || []).slice(0,3);
   document.getElementById('intPills').innerHTML = exp.length
     ? exp.map(i=>`<span class="int-pill">${i}</span>`).join('') + imp.map(i=>`<span class="int-impl">${i}</span>`).join('')
     : '<p style="font-size:13px;color:var(--s400)">No interests configured</p>';
+  renderAccount();
+  if (!silent) toast(`Signed in as ${u.name}`);
   loadFeed();
 }
+
+function signOut() {
+  S.currentUser = null;
+  S.menuOpen = false;
+  S.posts = [];
+  localStorage.removeItem(LS_KEY);
+  document.getElementById('intPills').innerHTML = '<p style="font-size:13px;color:var(--s400)">Sign in to see your interests</p>';
+  renderAccount();
+  renderLoggedOutFeed();
+  toast('Logged out');
+}
+
+function renderLoggedOutFeed() {
+  document.getElementById('postCount').textContent = '—';
+  document.getElementById('resLbl').textContent = 'Signed out';
+  document.getElementById('feedPosts').innerHTML = `
+    <div class="login-prompt">
+      <div class="login-prompt-ic">⚖️</div>
+      <div class="login-prompt-t">Sign in to view your Justice Feed</div>
+      <div class="login-prompt-s">LexFeed personalizes legal awareness posts to your interests. Choose a profile to see your For You feed, trending topics, and urgent help requests.</div>
+      <button class="login-prompt-btn" onclick="openLoginMenu()">Sign in to continue</button>
+    </div>`;
+}
+
+function openLoginMenu() { S.menuOpen = true; renderAccount(); }
 
 // ── TAB SWITCHING ─────────────────────────────────────────────────────────────
 function switchTab(tab, btn) {
@@ -582,7 +732,7 @@ function filterCat(cat) {
 function clearCat() { filterCat('All'); }
 
 async function loadFeed() {
-  if (!S.currentUser) return;
+  if (!S.currentUser) { renderLoggedOutFeed(); return; }
   document.getElementById('feedPosts').innerHTML = skels(3);
   document.getElementById('resLbl').textContent = 'Loading…';
   const data = await api(`/feed/${S.currentUser}?limit=20&tab=${S.activeTab}`);
@@ -834,7 +984,10 @@ async function submitRetweet() {
 }
 
 // ── COMPOSER ──────────────────────────────────────────────────────────────────
-function openModal()  { document.getElementById('compModal').style.display = 'flex'; }
+function openModal()  {
+  if (!S.currentUser) { toast('Please sign in to post', 'err'); openLoginMenu(); return; }
+  document.getElementById('compModal').style.display = 'flex';
+}
 function closeModal() { document.getElementById('compModal').style.display = 'none'; }
 function closeBg(e)   { if (e.target.id === 'compModal') closeModal(); }
 function upBtn() {
