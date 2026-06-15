@@ -1,5 +1,5 @@
 from supabase import create_client, Client
-from app.config import LEXFEED_ENV, SUPABASE_URL, SUPABASE_ANON_KEY
+from app.config import LEXFEED_ENV, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 from app import demo_store
 
 _client: Client = None
@@ -20,7 +20,11 @@ def get_supabase() -> Client:
     if _client is None:
         if use_demo_store():
             raise ValueError("Supabase URL and Anon Key must be configured in .env file.")
-        _client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        # Prefer the service-role key (backend-only) so LexFeed can write to
+        # RLS-protected tables (embeddings, interests, logs). Falls back to the
+        # anon key for read-only use if the service key isn't configured.
+        key = SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY
+        _client = create_client(SUPABASE_URL, key)
     return _client
 
 

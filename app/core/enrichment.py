@@ -1,6 +1,6 @@
 import json
 from groq import Groq
-from app.config import GROQ_API_KEY, LEGAL_CATEGORIES, POST_TYPES, URGENCY_LEVELS
+from app.config import GROQ_API_KEY, GROQ_MODEL, LEGAL_CATEGORIES, POST_TYPES, URGENCY_LEVELS
 
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
@@ -33,7 +33,7 @@ Return this exact JSON structure:
 
     try:
         response = client.chat.completions.create(
-            model="llama3-8b-8192",  # Free, fast Groq model
+            model=GROQ_MODEL,  # current free, fast Groq model (configurable)
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
             max_tokens=400,
