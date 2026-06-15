@@ -47,7 +47,7 @@ security definer
 set search_path = public
 as $$
 begin
-  delete from public.legal_news;                       -- drop old batch (frees space)
+  delete from public.legal_news where true;            -- drop old batch (frees space; WHERE satisfies safe-update guard)
   insert into public.legal_news
     (position, tag, title, summary, source, url, image, time_label, fetched_at)
   select

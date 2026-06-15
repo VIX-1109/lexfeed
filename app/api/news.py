@@ -291,28 +291,29 @@ async def get_live_news(limit: int = 6, refresh: bool = False):
     source = "static_fallback"
     items = []
 
-    # 1. GNews API
-    items = await _fetch_gnews(limit)
+    # 1. Bar & Bench RSS — free, unlimited, fresh (primary source)
+    items = await _fetch_barandbench_rss(limit)
     if items:
-        source = "gnews_api"
+        source = "barandbench_rss"
 
-    # 2. Bar & Bench RSS
+    # 2. Google News RSS — free, unlimited fallback
     if not items:
-        items = await _fetch_barandbench_rss(limit)
+        items = await _fetch_google_news_rss(limit)
         if items:
-            source = "barandbench_rss"
+            source = "google_news_rss"
 
-    # 3. Google Custom Search
+    # 3. Google Custom Search (only if keys configured)
     if not items:
         items = await _fetch_google_custom_search(limit)
         if items:
             source = "google_custom_search"
 
-    # 4. Google News RSS
+    # 4. GNews API — last resort. Free plan is 12h-delayed and often returns
+    #    nothing, so it sits at the bottom of the chain.
     if not items:
-        items = await _fetch_google_news_rss(limit)
+        items = await _fetch_gnews(limit)
         if items:
-            source = "google_news_rss"
+            source = "gnews_api"
 
     # Static fallback
     if not items:
