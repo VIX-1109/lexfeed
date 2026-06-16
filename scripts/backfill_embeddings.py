@@ -13,11 +13,8 @@ sys.path.insert(0, ROOT)
 from dotenv import load_dotenv  # noqa: E402
 load_dotenv(os.path.join(ROOT, ".env"))
 
-from app.database import get_supabase, upsert_post_embedding, upsert_post_tags  # noqa: E402
-from app.core.enrichment import enrich_post  # noqa: E402
-from app.core.embeddings import embed_text  # noqa: E402
-
-URGENCY = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+from app.database import get_supabase  # noqa: E402
+from app.core.enrichment import enrich_and_store_post  # noqa: E402
 
 
 def main():
@@ -29,22 +26,7 @@ def main():
     print(f"[backfill] {len(todo)} post(s) to enrich")
     for i, p in enumerate(todo, 1):
         try:
-            tags = enrich_post(p["content"])
-            embedding = embed_text(p["content"])
-            upsert_post_embedding(
-                post_id=p["id"],
-                embedding=embedding,
-                enriched_tags=tags.get("enriched_tags", []),
-                legal_topics=[tags.get("primary_category")] + tags.get("secondary_categories", []),
-                urgency_score=URGENCY.get(tags.get("urgency", "low"), 1),
-            )
-            upsert_post_tags(p["id"], {
-                "primary_topic": tags.get("primary_category"),
-                "secondary_topics": tags.get("secondary_categories", []),
-                "legal_acts": tags.get("legal_acts", []),
-                "urgency": tags.get("urgency", "low"),
-                "target_audience": tags.get("target_audience", []),
-            })
+            tags = enrich_and_store_post(p["id"], p["content"])
             print(f"  [{i}/{len(todo)}] ok  {tags.get('primary_category')}  {p['id']}")
         except Exception as e:
             print(f"  [{i}/{len(todo)}] FAILED {p['id']}: {e}")
