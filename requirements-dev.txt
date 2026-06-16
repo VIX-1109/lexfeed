@@ -1,0 +1,6 @@
+# Dev-only dependencies (not installed in the deployed container).
+# Install with:  pip install -r requirements-dev.txt
+-r requirements.txt
+jupyter==1.0.0
+ipykernel==6.29.4
+pytest==8.2.0

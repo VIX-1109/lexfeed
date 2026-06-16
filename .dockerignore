@@ -1,0 +1,18 @@
+.venv
+.git
+.gitignore
+.env
+.env.*
+.claude
+.pytest_cache
+.uvicorn.*.log
+__pycache__
+**/__pycache__
+*.pyc
+
+# Not needed inside the API container
+frontend
+notebooks
+tests
+docs
+demo

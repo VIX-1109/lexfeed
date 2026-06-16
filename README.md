@@ -1,3 +1,13 @@
+---
+title: LexFeed
+emoji: ⚖️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # LexFeed — Legal Content Recommendation Engine
 
 A standalone ML-powered content recommendation engine for legal platforms.
