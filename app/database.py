@@ -41,8 +41,10 @@ def fetch_post_by_id(post_id: str):
     if use_demo_store():
         return demo_store.fetch_post_by_id(post_id)
     db = get_supabase()
-    res = db.table("posts").select("*").eq("id", post_id).single().execute()
-    return res.data
+    # Use limit(1) instead of .single()/.maybe_single(): on 0 rows those return
+    # a 204 that supabase-py 2.4.x mis-handles ("Missing response").
+    res = db.table("posts").select("*").eq("id", post_id).limit(1).execute()
+    return (res.data or [None])[0]
 
 
 def fetch_user_interactions(user_id: str, limit: int = 200):
@@ -59,8 +61,8 @@ def fetch_user_interests(user_id: str):
     if use_demo_store():
         return demo_store.fetch_user_interests(user_id)
     db = get_supabase()
-    res = db.table("user_interests").select("*").eq("user_id", user_id).maybe_single().execute()
-    return res.data
+    res = db.table("user_interests").select("*").eq("user_id", user_id).limit(1).execute()
+    return (res.data or [None])[0]
 
 
 def upsert_user_interests(user_id: str, interest_vector: list, explicit_interests: list = None, implicit_interests: list = None):
@@ -84,8 +86,8 @@ def fetch_post_embedding(post_id: str):
     if use_demo_store():
         return demo_store.fetch_post_embedding(post_id)
     db = get_supabase()
-    res = db.table("post_embeddings").select("*").eq("post_id", post_id).maybe_single().execute()
-    return res.data
+    res = db.table("post_embeddings").select("*").eq("post_id", post_id).limit(1).execute()
+    return (res.data or [None])[0]
 
 
 def fetch_post_embeddings_batch(post_ids: list) -> dict:
